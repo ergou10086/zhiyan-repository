@@ -118,6 +118,7 @@
             <scope>test</scope>
         </dependency>
 
+        <!--公共模块-->
         <dependency>
             <groupId>hbnu.project</groupId>
             <artifactId>zhiyan-common</artifactId>

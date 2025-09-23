@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,53 +28,85 @@ import java.util.List;
 @AllArgsConstructor
 public class User {
 
+    /**
+     * 雪花id
+     */
     @Id
     @Column(name = "id", nullable = false, columnDefinition = "BIGINT COMMENT '用户唯一标识（雪花ID）'")
     private Long id;
 
+    /**
+     *  用户邮箱（登录账号）
+     */
     @Column(name = "email", nullable = false, unique = true,
             columnDefinition = "VARCHAR(255) COMMENT '用户邮箱（登录账号）'")
     private String email;
 
+    /**
+     * 用户密码哈希值
+     */
     @Column(name = "password_hash", nullable = false,
             columnDefinition = "VARCHAR(255) COMMENT '密码哈希值（加密存储）'")
     private String passwordHash;
 
+    /**
+     * 用户名
+     */
     @Column(name = "name", nullable = false, length = 100,
             columnDefinition = "VARCHAR(100) COMMENT '用户姓名'")
     private String name;
 
+    /**
+     * 头像URL
+     */
     @Column(name = "avatar_url", length = 500,
             columnDefinition = "VARCHAR(500) COMMENT '用户头像URL'")
     private String avatarUrl;
 
+    /**
+     * 用户职称/职位
+     */
     @Column(name = "title", length = 100,
             columnDefinition = "VARCHAR(100) COMMENT '用户职称/职位'")
     private String title;
 
+    /**
+     * 所属机构
+     */
     @Column(name = "institution", length = 200,
             columnDefinition = "VARCHAR(200) COMMENT '用户所属机构'")
     private String institution;
 
+    /**
+     * 账号是否锁定
+     */
     @Column(name = "is_locked", nullable = false,
             columnDefinition = "BOOLEAN DEFAULT FALSE COMMENT '是否锁定（禁止登录）'")
     private Boolean isLocked = false;
 
+    /**
+     * 软删除标记
+     */
     @Column(name = "is_deleted", nullable = false,
             columnDefinition = "BOOLEAN DEFAULT FALSE COMMENT '软删除标记'")
     private Boolean isDeleted = false;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false,
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'")
+    /**
+     * 数据创建时间（由审计自动填充）
+     */
+    @CreatedDate
+    @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at",
-            columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'")
+    /**
+     * 数据最后修改时间（由审计自动更新）
+     */
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    // 用户角色关联（一对多）
+    /**
+     * 用户角色关联（一对多）
+     */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UserRole> userRoles;
 

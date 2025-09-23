@@ -1,9 +1,8 @@
-package hbnu.project.zhiyancommon.utils.ip;
+package hbnu.project.zhiyancommon.utils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.servlet.http.HttpServletRequest;
-import hbnu.project.zhiyancommon.utils.StringUtils;
 
 /**
  * 获取IP方法

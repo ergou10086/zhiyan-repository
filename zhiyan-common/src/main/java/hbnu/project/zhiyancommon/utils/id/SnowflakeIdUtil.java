@@ -30,6 +30,7 @@ public class SnowflakeIdUtil {
      */
     private static final long DEFAULT_WORKER_ID = getWorkerId();
 
+
     static {
         // 初始化默认雪花ID生成器
         defaultSnowflake = createSnowflake(DEFAULT_DATACENTER_ID, DEFAULT_WORKER_ID);
@@ -44,6 +45,7 @@ public class SnowflakeIdUtil {
         return defaultSnowflake.nextId();
     }
 
+
     /**
      * 获取默认的雪花ID (String类型)
      *
@@ -52,6 +54,7 @@ public class SnowflakeIdUtil {
     public static String nextIdStr() {
         return String.valueOf(defaultSnowflake.nextId());
     }
+
 
     /**
      * 创建雪花ID生成器
@@ -64,6 +67,7 @@ public class SnowflakeIdUtil {
         return IdUtil.getSnowflake(workerId, datacenterId);
     }
 
+
     /**
      * 使用指定的数据中心ID和工作机器ID生成雪花ID
      *
@@ -75,6 +79,7 @@ public class SnowflakeIdUtil {
         return createSnowflake(datacenterId, workerId).nextId();
     }
 
+
     /**
      * 使用指定的数据中心ID和工作机器ID生成雪花ID字符串
      *
@@ -85,6 +90,7 @@ public class SnowflakeIdUtil {
     public static String nextIdStr(long datacenterId, long workerId) {
         return String.valueOf(nextId(datacenterId, workerId));
     }
+
 
     /**
      * 解析雪花ID，获取其组成信息
@@ -103,6 +109,7 @@ public class SnowflakeIdUtil {
 
         return new SnowflakeInfo(timestamp, datacenterId, workerId, sequence);
     }
+
 
     /**
      * 自动获取工作机器ID
@@ -130,6 +137,7 @@ public class SnowflakeIdUtil {
         // 默认返回1
         return 1L;
     }
+
 
     /**
      * 重置默认雪花ID生成器
