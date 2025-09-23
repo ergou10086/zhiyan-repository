@@ -1,0 +1,112 @@
+# zhiyan-auth-service
+server:
+  port: 8091
+
+spring:
+  application:
+    name: zhiyan-auth-service
+
+  cloud:
+    nacos:
+      # Nacos服务发现
+      discovery:
+        # Nacos地址
+        server-addr: 127.0.0.1:8848
+        # 命名空间
+        namespace: zhiyan-dev
+        # 组
+        group: DEFAULT_GROUP
+        # 权重
+        weight: 1
+
+      # Nacos配置中心
+      config:
+        # 和服务发现的一样
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        namespace: ${spring.cloud.nacos.discovery.namespace}
+        group: ${spring.cloud.nacos.discovery.group}
+        file-extension: yaml
+
+    # OpenFeign配置
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 5000
+            read-timeout: 10000
+            logger-level: basic
+      compression:
+        request:
+          enabled: true
+        response:
+          enabled: true
+
+  # 数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/zhiyan_platform?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8mb4
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:zjm10086}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 连接池
+    hikari:
+      pool-name: AuthServiceHikariPool
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+
+  # Jackson配置
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+
+# Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,env
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    git:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    hbnu.project.zhiyan: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.zaxxer.hikari: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/zhiyan-auth-service.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 30

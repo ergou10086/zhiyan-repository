@@ -1,0 +1,97 @@
+## 服务基本信息
+#server:
+#  port: 8083
+#  servlet:
+#    context-path: /
+#  tomcat:
+#    uri-encoding: UTF-8
+#    threads:
+#      max: 200
+#      min-spare: 30
+
+
+# 日志配置
+logging:
+  config: classpath:log4j2-spring.xml
+  level:
+    root: info
+    hbnu.project: debug
+
+
+spring:
+  application:
+    name: service-name
+
+#  # Nacos服务注册与发现配置
+#  cloud:
+#    nacos:
+#      # 服务注册配置
+#      discovery:
+#        # Nacos服务注册中心地址
+#        server-addr: 127.0.0.1:8848
+#        # 命名空间，用于环境隔离（开发/测试/生产）
+#        namespace: zhiyan-dev
+#        # 服务分组，用于业务分组隔离
+#        group: zhiyan-group
+#        # 权重配置，范围0-100，用于负载均衡权重分配
+#        weight: 1
+#        # 元数据信息，可用于服务筛选
+#        metadata:
+#          version: 1.0
+#          environment: development
+#
+#      # Nacos配置中心配置
+#      config:
+#        # Nacos配置中心地址
+#        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+#        # 配置文件命名空间，建议与服务发现保持一致
+#        namespace: ${spring.cloud.nacos.discovery.namespace}
+#        # 配置文件分组
+#        group: ${spring.cloud.nacos.discovery.group}
+#        # 配置文件类型
+#        file-extension: yaml
+#        # 配置文件前缀，默认使用spring.application.name
+#        prefix: ${spring.application.name}
+#        # 共享配置
+#        shared-configs:
+#          - data-id: common.yaml
+#            group: ${spring.cloud.nacos.discovery.group}
+#            refresh: true  # 支持动态刷新
+#          - data-id: datasource.yaml
+#            group: ${spring.cloud.nacos.discovery.group}
+#            refresh: false  # 数据源配置通常不动态刷新
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 20MB
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+
+# Actuator监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+    shutdown:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}

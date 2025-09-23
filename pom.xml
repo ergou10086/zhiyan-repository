@@ -25,6 +25,7 @@
         <module>zhiyan-project-service</module>
         <module>zhiyan-knowledge-service</module>
         <module>zhiyan-ai-service</module>
+        <module>zhiyan-security</module>
     </modules>
 
     <properties>
