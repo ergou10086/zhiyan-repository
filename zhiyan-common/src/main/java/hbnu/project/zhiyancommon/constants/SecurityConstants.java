@@ -1,12 +1,12 @@
-package com.ruoyi.common.core.constant;
+package hbnu.project.zhiyancommon.constants;
 
 /**
  * 权限相关通用常量
  * 
- * @author ruoyi
+ * @author ErgouTree
  */
-public class SecurityConstants
-{
+public class SecurityConstants {
+
     /**
      * 用户ID字段
      */

@@ -1,4 +1,4 @@
-package com.ruoyi.common.core.utils.file;
+package hbnu.project.zhiyancommon.utils.file;
 
 /**
  * 媒体类型工具类

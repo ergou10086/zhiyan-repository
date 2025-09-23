@@ -1,12 +1,11 @@
-package com.ruoyi.common.core.constant;
+package hbnu.project.zhiyancommon.constants;
 
 /**
  * Token的Key常量
  * 
- * @author ruoyi
+ * @author ErgouTree
  */
-public class TokenConstants
-{
+public class TokenConstants {
     /**
      * 令牌前缀
      */
@@ -15,5 +14,5 @@ public class TokenConstants
     /**
      * 令牌秘钥
      */
-    public final static String SECRET = "abcdefghijklmnopqrstuvwxyz";
+    public final static String SECRET = "zjmyxypxlllhshlzqzhb";
 }
