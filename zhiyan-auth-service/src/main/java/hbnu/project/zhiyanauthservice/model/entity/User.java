@@ -6,8 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -26,7 +24,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User extends BaseAuditEntity{
 
     /**
      * 雪花id
@@ -90,19 +88,6 @@ public class User {
     @Column(name = "is_deleted", nullable = false,
             columnDefinition = "BOOLEAN DEFAULT FALSE COMMENT '软删除标记'")
     private Boolean isDeleted = false;
-
-    /**
-     * 数据创建时间（由审计自动填充）
-     */
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    /**
-     * 数据最后修改时间（由审计自动更新）
-     */
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 
     /**
      * 用户角色关联（一对多）

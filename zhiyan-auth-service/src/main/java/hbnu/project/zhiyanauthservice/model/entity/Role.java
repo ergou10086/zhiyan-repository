@@ -22,7 +22,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Role {
+public class Role extends BaseAuditEntity{
 
     /**
      * 雪花id
@@ -45,30 +45,11 @@ public class Role {
     private String description;
 
     /**
-     * 数据创建时间（由审计自动填充）
-     */
-    @CreatedDate
-    @Column(updatable = false)
-    private LocalDateTime createdAt;
-
-    /**
-     * 数据最后修改时间（由审计自动更新）
-     */
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
-
-    /**
      * 数据创建人（由审计自动填充）
      */
     @CreatedBy
     @Column(updatable = false)
     private String createdBy;
-
-    /**
-     * 数据最后修改人（由审计自动更新）
-     */
-    @LastModifiedBy
-    private String updatedBy;
 
     /**
      * 角色用户关联（一对多）

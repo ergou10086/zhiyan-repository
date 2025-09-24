@@ -62,19 +62,24 @@ public class SecurityUtils {
     }
 
     /**
-     * 是否为管理员（根据您的业务逻辑调整）
+     * 是否为管理员
      */
     public static boolean isAdmin(Long userId) {
         // 根据您的业务逻辑实现
         return userId != null && userId.equals(1L); // 示例
     }
 
-    // 密码加密和验证方法（完全通用）
+    /**
+     * 密码加密
+     */
     public static String encryptPassword(String password) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.encode(password);
     }
 
+    /**
+     * 密码匹配
+     */
     public static boolean matchesPassword(String rawPassword, String encodedPassword) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
         return passwordEncoder.matches(rawPassword, encodedPassword);
