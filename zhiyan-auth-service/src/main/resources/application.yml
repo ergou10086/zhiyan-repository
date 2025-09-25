@@ -69,6 +69,20 @@ spring:
           max-idle: 8
           min-idle: 2
 
+  # 邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@qq.com}
+    password: ${MAIL_PASSWORD:your-app-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    default-encoding: UTF-8
 
   # Jackson配置
   jackson:
@@ -88,6 +102,25 @@ spring:
       ddl-auto: update
     show-sql: true
     open-in-view: false
+
+# 验证码配置
+app:
+  verification-code:
+    length: 6
+    expire-minutes: 10
+    rate-limit-minutes: 1
+    enable-database-storage: true
+    enable-email-sending: true
+    enable-cleanup-task: true
+    max-retry-attempts: 3
+  name: 智研平台
+
+# JWT配置
+jwt:
+  secret: zhiyan-platform-secret-key-2024
+  issuer: zhiyan-platform
+  access-token-expire-minutes: 120
+  refresh-token-expire-minutes: 10080
 
 # Actuator配置
 management:
