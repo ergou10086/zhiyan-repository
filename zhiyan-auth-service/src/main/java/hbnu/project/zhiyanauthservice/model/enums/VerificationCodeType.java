@@ -19,12 +19,7 @@ public enum VerificationCodeType {
     /**
      * 修改邮箱验证码
      */
-    CHANGE_EMAIL("修改邮箱"),
-
-    /**
-     * 登录二次验证码（可选功能）
-     */
-    LOGIN_VERIFICATION("登录验证");
+    CHANGE_EMAIL("修改邮箱");
 
     private final String description;
 

@@ -130,5 +130,13 @@
             <artifactId>zhiyan-common</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+
+        <!--安全模块-->
+        <dependency>
+            <groupId>hbnu.project</groupId>
+            <artifactId>zhiyan-security</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 </project>

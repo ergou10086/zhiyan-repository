@@ -10,6 +10,7 @@ import java.util.List;
 
 /**
  * 用户信息更新数据传输对象
+ * 非验证类的在这里修改，如果有需要可以限制时间
  *
  * @author ErgouTree
  */

@@ -57,12 +57,15 @@ public class BaseException extends RuntimeException
         this(null, null, null, defaultMessage);
     }
 
+    public BaseException(String message, Throwable e) {
+    }
+
     public String getModule()
     {
         return module;
     }
 
-    public String getCode()
+    public Integer getCode()
     {
         return code;
     }

@@ -79,6 +79,19 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
     }
 
     /**
+     * 强转->类型不同则抛出 ClassCastException 异常
+     *
+     * @param obj 对象
+     * @param <T> 泛型标记
+     * @return 强转后的对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T cast(Object obj)
+    {
+        return (T) obj;
+    }
+
+    /**
      * * 判断一个Map是否为空
      *
      * @param map 要判断的Map

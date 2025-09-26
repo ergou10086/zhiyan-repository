@@ -3,7 +3,7 @@ package hbnu.project.zhiyanauthservice.model.enums;
 /**
  * 系统权限枚举
  * 定义系统中的所有权限标识符
- * 过细过于繁杂，需要重新设计
+ * 过细过于繁杂，需要重新设计 ——yui
  *
  * @author ErgouTree
  */

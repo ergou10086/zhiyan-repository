@@ -1,10 +1,7 @@
 package hbnu.project.zhiyanauthservice.service;
 
-import hbnu.project.zhiyanauthservice.model.dto.BatchUserOperationDTO;
 import hbnu.project.zhiyanauthservice.model.dto.TokenDTO;
 import hbnu.project.zhiyanauthservice.model.dto.UserDTO;
-import hbnu.project.zhiyanauthservice.model.dto.UserUpdateDTO;
-import hbnu.project.zhiyanauthservice.model.entity.User;
 import hbnu.project.zhiyanauthservice.model.form.LoginBody;
 import hbnu.project.zhiyanauthservice.model.form.RegisterBody;
 import hbnu.project.zhiyanauthservice.model.form.ResetPasswordBody;
@@ -12,9 +9,6 @@ import hbnu.project.zhiyanauthservice.model.form.UserProfileUpdateBody;
 import hbnu.project.zhiyancommon.domain.R;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户服务接口

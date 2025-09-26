@@ -11,7 +11,7 @@ public enum SystemRole {
     /**
      * 开发者
      */
-    DEVELOPER("超级管理员", "拥有系统所有权限"),
+    DEVELOPER("开发者", "拥有系统所有权限"),
     
     /**
      * 系统管理员

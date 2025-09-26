@@ -1,6 +1,8 @@
 package hbnu.project.zhiyanauthservice.repository;
 
 import hbnu.project.zhiyanauthservice.model.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -60,10 +62,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return 用户对象（可能为空）
      */
     @Query("SELECT DISTINCT u FROM User u " +
-           "LEFT JOIN FETCH u.userRoles ur " +
-           "LEFT JOIN FETCH ur.role r " +
-           "LEFT JOIN FETCH r.rolePermissions rp " +
-           "LEFT JOIN FETCH rp.permission p " +
-           "WHERE u.id = :userId AND u.isDeleted = false")
+            "LEFT JOIN FETCH u.userRoles ur " +
+            "LEFT JOIN FETCH ur.role r " +
+            "LEFT JOIN FETCH r.rolePermissions rp " +
+            "LEFT JOIN FETCH rp.permission p " +
+            "WHERE u.id = :userId AND u.isDeleted = false")
     Optional<User> findByIdWithRolesAndPermissions(@Param("userId") Long userId);
+
+    /**
+     * 分页查询未删除的用户
+     *
+     * @param pageable 分页参数
+     * @return 用户分页结果
+     */
+    Page<User> findByIsDeletedFalse(Pageable pageable);
+
+    /**
+     * 根据关键词搜索用户（姓名或邮箱包含关键词）
+     *
+     * @param nameKeyword 姓名关键词
+     * @param emailKeyword 邮箱关键词
+     * @param pageable 分页参数
+     * @return 用户分页结果
+     */
+    Page<User> findByNameContainingOrEmailContainingAndIsDeletedFalse(
+            String nameKeyword, String emailKeyword, Pageable pageable);
 }
