@@ -82,12 +82,12 @@
             <version>3.15.0</version>
         </dependency>
 
-        <!-- Java Servlet -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>4.0.1</version>
-        </dependency>
+<!--        &lt;!&ndash; Java Servlet &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>javax.servlet</groupId>-->
+<!--            <artifactId>javax.servlet-api</artifactId>-->
+<!--            <version>4.0.1</version>-->
+<!--        </dependency>-->
 
         <!-- Jwt -->
         <dependency>

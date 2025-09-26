@@ -41,6 +41,13 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
         </dependency>
+
+        <!--公共模块-->
+        <dependency>
+            <groupId>hbnu.project</groupId>
+            <artifactId>zhiyan-common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

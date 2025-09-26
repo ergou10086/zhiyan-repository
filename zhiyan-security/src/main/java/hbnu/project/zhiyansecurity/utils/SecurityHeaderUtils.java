@@ -2,7 +2,7 @@ package hbnu.project.zhiyansecurity.utils;
 
 import hbnu.project.zhiyancommon.constants.SecurityConstants;
 import hbnu.project.zhiyancommon.utils.StringUtils;
-import hbnu.project.zhiyansecurity.context.LoginUser;
+import hbnu.project.zhiyansecurity.context.LoginUserBody;
 import hbnu.project.zhiyansecurity.context.SecurityContextHolder;
 import org.springframework.http.HttpHeaders;
 
@@ -121,56 +121,56 @@ public class SecurityHeaderUtils {
     /**
      * 从LoginUser对象创建安全请求头
      *
-     * @param loginUser 登录用户信息
+     * @param loginUserBody 登录用户信息
      * @return 包含用户信息的请求头Map
      */
-    public static Map<String, String> createSecurityHeaders(LoginUser loginUser) {
+    public static Map<String, String> createSecurityHeaders(LoginUserBody loginUserBody) {
         Map<String, String> headers = new HashMap<>();
 
-        if (loginUser == null) {
+        if (loginUserBody == null) {
             return headers;
         }
 
         try {
-            if (loginUser.getUserId() != null) {
-                headers.put(SecurityConstants.DETAILS_USER_ID, loginUser.getUserId().toString());
+            if (loginUserBody.getUserId() != null) {
+                headers.put(SecurityConstants.DETAILS_USER_ID, loginUserBody.getUserId().toString());
             }
 
-            if (StringUtils.isNotBlank(loginUser.getEmail())) {
-                headers.put(SecurityConstants.DETAILS_USERNAME, loginUser.getEmail());
-                headers.put(SecurityConstants.DETAILS_USER_EMAIL, loginUser.getEmail());
+            if (StringUtils.isNotBlank(loginUserBody.getEmail())) {
+                headers.put(SecurityConstants.DETAILS_USERNAME, loginUserBody.getEmail());
+                headers.put(SecurityConstants.DETAILS_USER_EMAIL, loginUserBody.getEmail());
             }
 
-            if (StringUtils.isNotBlank(loginUser.getName())) {
-                headers.put(SecurityConstants.DETAILS_USER_NAME, loginUser.getName());
+            if (StringUtils.isNotBlank(loginUserBody.getName())) {
+                headers.put(SecurityConstants.DETAILS_USER_NAME, loginUserBody.getName());
             }
 
-            if (StringUtils.isNotBlank(loginUser.getAvatarUrl())) {
-                headers.put(SecurityConstants.DETAILS_USER_AVATAR, loginUser.getAvatarUrl());
+            if (StringUtils.isNotBlank(loginUserBody.getAvatarUrl())) {
+                headers.put(SecurityConstants.DETAILS_USER_AVATAR, loginUserBody.getAvatarUrl());
             }
 
-            if (StringUtils.isNotBlank(loginUser.getTitle())) {
-                headers.put(SecurityConstants.DETAILS_USER_TITLE, loginUser.getTitle());
+            if (StringUtils.isNotBlank(loginUserBody.getTitle())) {
+                headers.put(SecurityConstants.DETAILS_USER_TITLE, loginUserBody.getTitle());
             }
 
-            if (StringUtils.isNotBlank(loginUser.getInstitution())) {
-                headers.put(SecurityConstants.DETAILS_USER_INSTITUTION, loginUser.getInstitution());
+            if (StringUtils.isNotBlank(loginUserBody.getInstitution())) {
+                headers.put(SecurityConstants.DETAILS_USER_INSTITUTION, loginUserBody.getInstitution());
             }
 
-            if (loginUser.getRoles() != null && !loginUser.getRoles().isEmpty()) {
-                headers.put(SecurityConstants.LOGIN_USER_ROLES, String.join(",", loginUser.getRoles()));
+            if (loginUserBody.getRoles() != null && !loginUserBody.getRoles().isEmpty()) {
+                headers.put(SecurityConstants.LOGIN_USER_ROLES, String.join(",", loginUserBody.getRoles()));
             }
 
-            if (loginUser.getPermissions() != null && !loginUser.getPermissions().isEmpty()) {
-                headers.put(SecurityConstants.LOGIN_USER_PERMISSIONS, String.join(",", loginUser.getPermissions()));
+            if (loginUserBody.getPermissions() != null && !loginUserBody.getPermissions().isEmpty()) {
+                headers.put(SecurityConstants.LOGIN_USER_PERMISSIONS, String.join(",", loginUserBody.getPermissions()));
             }
 
-            if (StringUtils.isNotBlank(loginUser.getLoginIp())) {
-                headers.put(SecurityConstants.LOGIN_IP, loginUser.getLoginIp());
+            if (StringUtils.isNotBlank(loginUserBody.getLoginIp())) {
+                headers.put(SecurityConstants.LOGIN_IP, loginUserBody.getLoginIp());
             }
 
-            if (StringUtils.isNotBlank(loginUser.getBrowser())) {
-                headers.put(SecurityConstants.USER_AGENT, loginUser.getBrowser());
+            if (StringUtils.isNotBlank(loginUserBody.getBrowser())) {
+                headers.put(SecurityConstants.USER_AGENT, loginUserBody.getBrowser());
             }
 
             // 标记为内部请求
@@ -186,12 +186,12 @@ public class SecurityHeaderUtils {
     /**
      * 从LoginUser对象创建HttpHeaders
      *
-     * @param loginUser 登录用户信息
+     * @param loginUserBody 登录用户信息
      * @return HttpHeaders对象
      */
-    public static HttpHeaders createHttpHeaders(LoginUser loginUser) {
+    public static HttpHeaders createHttpHeaders(LoginUserBody loginUserBody) {
         HttpHeaders httpHeaders = new HttpHeaders();
-        Map<String, String> securityHeaders = createSecurityHeaders(loginUser);
+        Map<String, String> securityHeaders = createSecurityHeaders(loginUserBody);
         
         for (Map.Entry<String, String> entry : securityHeaders.entrySet()) {
             httpHeaders.set(entry.getKey(), entry.getValue());

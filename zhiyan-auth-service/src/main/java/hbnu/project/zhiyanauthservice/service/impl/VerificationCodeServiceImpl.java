@@ -9,7 +9,6 @@ import hbnu.project.zhiyancommon.domain.R;
 import hbnu.project.zhiyancommon.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.mail.SimpleMailMessage;
@@ -349,7 +348,6 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             case REGISTER -> appName + " - 注册验证码";
             case RESET_PASSWORD -> appName + " - 密码重置验证码";
             case CHANGE_EMAIL -> appName + " - 邮箱变更验证码";
-            case LOGIN_VERIFICATION -> appName + " - 登录验证码";
         };
     }
 
@@ -366,7 +364,6 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             case REGISTER -> "注册账户";
             case RESET_PASSWORD -> "重置密码";
             case CHANGE_EMAIL -> "变更邮箱";
-            case LOGIN_VERIFICATION -> "登录验证";
         };
 
         return String.format(

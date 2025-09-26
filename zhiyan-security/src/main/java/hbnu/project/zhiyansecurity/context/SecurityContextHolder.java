@@ -6,7 +6,6 @@ import hbnu.project.zhiyancommon.utils.text.ConvertUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,7 +29,7 @@ public class SecurityContextHolder {
     /**
      * 兼容原有的LoginUser存储方式
      */
-    private static final ThreadLocal<LoginUser> LOGIN_USER_HOLDER = new ThreadLocal<>();
+    private static final ThreadLocal<LoginUserBody> LOGIN_USER_HOLDER = new ThreadLocal<>();
 
     /**
      * 设置键值对到线程上下文
@@ -93,33 +92,33 @@ public class SecurityContextHolder {
     /**
      * 设置当前登录用户信息（兼容原有方式）
      *
-     * @param loginUser 登录用户信息
+     * @param loginUserBody 登录用户信息
      */
-    public static void setLoginUser(LoginUser loginUser) {
-        LOGIN_USER_HOLDER.set(loginUser);
-        if (loginUser != null) {
+    public static void setLoginUser(LoginUserBody loginUserBody) {
+        LOGIN_USER_HOLDER.set(loginUserBody);
+        if (loginUserBody != null) {
             // 同时设置到通用上下文中
-            setUserId(loginUser.getUserId().toString());
-            setUserName(loginUser.getName());
-            setUserEmail(loginUser.getEmail());
-            set(SecurityConstants.DETAILS_USER_AVATAR, loginUser.getAvatarUrl());
-            set(SecurityConstants.DETAILS_USER_TITLE, loginUser.getTitle());
-            set(SecurityConstants.DETAILS_USER_INSTITUTION, loginUser.getInstitution());
-            set(SecurityConstants.IS_LOCKED, loginUser.getIsLocked());
-            set(SecurityConstants.LOGIN_TIME, loginUser.getLoginTime());
-            set(SecurityConstants.LOGIN_IP, loginUser.getLoginIp());
-            set(SecurityConstants.USER_AGENT, loginUser.getBrowser());
-            set(SecurityConstants.TOKEN_EXPIRE_TIME, loginUser.getExpireTime());
+            setUserId(loginUserBody.getUserId().toString());
+            setUserName(loginUserBody.getName());
+            setUserEmail(loginUserBody.getEmail());
+            set(SecurityConstants.DETAILS_USER_AVATAR, loginUserBody.getAvatarUrl());
+            set(SecurityConstants.DETAILS_USER_TITLE, loginUserBody.getTitle());
+            set(SecurityConstants.DETAILS_USER_INSTITUTION, loginUserBody.getInstitution());
+            set(SecurityConstants.IS_LOCKED, loginUserBody.getIsLocked());
+            set(SecurityConstants.LOGIN_TIME, loginUserBody.getLoginTime());
+            set(SecurityConstants.LOGIN_IP, loginUserBody.getLoginIp());
+            set(SecurityConstants.USER_AGENT, loginUserBody.getBrowser());
+            set(SecurityConstants.TOKEN_EXPIRE_TIME, loginUserBody.getExpireTime());
             
             // 设置角色和权限
-            if (loginUser.getRoles() != null) {
-                set(SecurityConstants.LOGIN_USER_ROLES, String.join(",", loginUser.getRoles()));
+            if (loginUserBody.getRoles() != null) {
+                set(SecurityConstants.LOGIN_USER_ROLES, String.join(",", loginUserBody.getRoles()));
             }
-            if (loginUser.getPermissions() != null) {
-                set(SecurityConstants.LOGIN_USER_PERMISSIONS, String.join(",", loginUser.getPermissions()));
+            if (loginUserBody.getPermissions() != null) {
+                set(SecurityConstants.LOGIN_USER_PERMISSIONS, String.join(",", loginUserBody.getPermissions()));
             }
             
-            log.debug("设置用户上下文 - 用户ID: {}, 用户名: {}", loginUser.getUserId(), loginUser.getName());
+            log.debug("设置用户上下文 - 用户ID: {}, 用户名: {}", loginUserBody.getUserId(), loginUserBody.getName());
         }
     }
 
@@ -128,16 +127,16 @@ public class SecurityContextHolder {
      *
      * @return 登录用户信息，如果未登录则返回null
      */
-    public static LoginUser getLoginUser() {
-        LoginUser loginUser = LOGIN_USER_HOLDER.get();
-        if (loginUser != null) {
-            return loginUser;
+    public static LoginUserBody getLoginUser() {
+        LoginUserBody loginUserBody = LOGIN_USER_HOLDER.get();
+        if (loginUserBody != null) {
+            return loginUserBody;
         }
         
         // 如果没有完整的LoginUser对象，尝试从上下文构建
         Long userId = getUserId();
         if (userId != null && userId > 0) {
-            return LoginUser.builder()
+            return LoginUserBody.builder()
                     .userId(userId)
                     .name(get(SecurityConstants.DETAILS_USER_NAME))
                     .email(get(SecurityConstants.DETAILS_USER_EMAIL))
@@ -366,9 +365,9 @@ public class SecurityContextHolder {
         }
         
         // 优先从LoginUser对象获取
-        LoginUser loginUser = LOGIN_USER_HOLDER.get();
-        if (loginUser != null) {
-            return loginUser.hasPermission(permission);
+        LoginUserBody loginUserBody = LOGIN_USER_HOLDER.get();
+        if (loginUserBody != null) {
+            return loginUserBody.hasPermission(permission);
         }
         
         // 从上下文字符串中查找
@@ -392,9 +391,9 @@ public class SecurityContextHolder {
         }
         
         // 优先从LoginUser对象获取
-        LoginUser loginUser = LOGIN_USER_HOLDER.get();
-        if (loginUser != null) {
-            return loginUser.hasRole(role);
+        LoginUserBody loginUserBody = LOGIN_USER_HOLDER.get();
+        if (loginUserBody != null) {
+            return loginUserBody.hasRole(role);
         }
         
         // 从上下文字符串中查找

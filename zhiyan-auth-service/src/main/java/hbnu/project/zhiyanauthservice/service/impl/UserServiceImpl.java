@@ -20,6 +20,7 @@ import hbnu.project.zhiyanauthservice.service.UserService;
 import hbnu.project.zhiyanauthservice.service.VerificationCodeService;
 import hbnu.project.zhiyancommon.constants.GeneralConstants;
 import hbnu.project.zhiyansecurity.utils.SecurityUtils;
+import hbnu.project.zhiyansecurity.mapper.SecurityMapperManager;
 import hbnu.project.zhiyancommon.domain.R;
 import hbnu.project.zhiyancommon.utils.StringUtils;
 
@@ -54,6 +55,7 @@ public class UserServiceImpl implements UserService {
     private final VerificationCodeService verificationCodeService;
     private final AuthService authService;
     private final PermissionService permissionService;
+    private final SecurityMapperManager mapperManager;
 
 
     /**

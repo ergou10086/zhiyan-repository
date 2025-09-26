@@ -20,7 +20,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginUser implements Serializable {
+public class LoginUserBody implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -169,3 +169,4 @@ public class LoginUser implements Serializable {
         return isLocked == null || !isLocked;
     }
 }
+

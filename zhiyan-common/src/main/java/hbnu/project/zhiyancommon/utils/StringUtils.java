@@ -567,12 +567,6 @@ public class StringUtils extends org.apache.commons.lang3.StringUtils {
         return matcher.match(pattern, url);
     }
 
-    @SuppressWarnings("unchecked")
-    public static <T> T cast(Object obj)
-    {
-        return (T) obj;
-    }
-
     /**
      * 数字左边补齐0，使之达到指定长度。注意，如果数字转换为字符串后，长度大于size，则只保留 最后size个字符。
      *

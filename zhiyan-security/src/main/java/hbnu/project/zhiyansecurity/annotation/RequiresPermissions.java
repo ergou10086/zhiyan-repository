@@ -26,3 +26,4 @@ public @interface RequiresPermissions {
      */
     Logical logical() default Logical.AND;
 }
+

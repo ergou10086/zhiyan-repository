@@ -3,9 +3,10 @@ package hbnu.project.zhiyansecurity.utils;
 import hbnu.project.zhiyancommon.constants.TokenConstants;
 import hbnu.project.zhiyancommon.utils.JwtUtils;
 import hbnu.project.zhiyancommon.utils.StringUtils;
-import hbnu.project.zhiyansecurity.context.LoginUser;
+import hbnu.project.zhiyansecurity.context.LoginUserBody;
 import hbnu.project.zhiyansecurity.context.SecurityContextHolder;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -60,19 +60,14 @@ public class SecurityUtils {
             }
 
             Object userIdObj = claims.get(TokenConstants.JWT_CLAIM_USER_ID);
-            if (userIdObj == null) {
-                return null;
-            }
+            return switch (userIdObj) {
+                case null -> null;
+                case Integer i -> i.longValue();
+                case Long l -> l;
+                case String s -> Long.parseLong(s);
+                default -> null;
+            };
 
-            if (userIdObj instanceof Integer) {
-                return ((Integer) userIdObj).longValue();
-            } else if (userIdObj instanceof Long) {
-                return (Long) userIdObj;
-            } else if (userIdObj instanceof String) {
-                return Long.parseLong((String) userIdObj);
-            }
-
-            return null;
         } catch (Exception e) {
             log.debug("获取当前用户ID失败: {}", e.getMessage());
             return null;
@@ -97,7 +92,7 @@ public class SecurityUtils {
             }
 
             // 从Spring Security上下文获取
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Authentication authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && !"anonymousUser".equals(authentication.getName())) {
                 return authentication.getName();
             }
@@ -108,12 +103,12 @@ public class SecurityUtils {
     }
 
     /**
-     * 获取当前登录用户的详细信息
+     * 获取当前登录用户的详细信息（重命名为避免冲突）
      * 从JWT Token中解析用户相关信息
      *
      * @return 用户信息Map，包含用户ID、用户名等
      */
-    public static Map<String, Object> getLoginUser() {
+    public static Map<String, Object> getLoginUserInfo() {
         try {
             String token = getToken();
             if (StringUtils.isBlank(token)) {
@@ -139,7 +134,6 @@ public class SecurityUtils {
             return null;
         }
     }
-
 
     /**
      * 获取当前请求的JWT Token
@@ -211,12 +205,12 @@ public class SecurityUtils {
         if (token.startsWith(TokenConstants.TOKEN_TYPE_BEARER + " ")) {
             return token.substring(TokenConstants.TOKEN_TYPE_BEARER.length() + 1);
         }
-        
+
         // 移除其他可能的前缀
         if (token.startsWith("Bearer ")) {
             return token.substring(7);
         }
-        
+
         return token;
     }
 
@@ -241,7 +235,7 @@ public class SecurityUtils {
         if (userId == null) {
             return false;
         }
-        
+
         // TODO: 这里可以根据实际业务逻辑实现
         // 可以查询用户的角色信息，判断是否包含管理员角色
         return userId.equals(1L);
@@ -301,7 +295,7 @@ public class SecurityUtils {
      *
      * @return 是否有效
      */
-    public static boolean isValidToken() {
+    public static boolean isValidCurrentToken() {
         String token = getToken();
         return isValidToken(token);
     }
@@ -329,7 +323,7 @@ public class SecurityUtils {
      *
      * @return 剩余时间（秒），如果Token无效则返回null
      */
-    public static Long getTokenRemainingTime() {
+    public static Long getCurrentTokenRemainingTime() {
         String token = getToken();
         return getTokenRemainingTime(token);
     }
@@ -359,7 +353,7 @@ public class SecurityUtils {
      * @param minutes 提前多少分钟算作即将过期
      * @return 是否即将过期
      */
-    public static boolean isTokenExpiringSoon(int minutes) {
+    public static boolean isCurrentTokenExpiringSoon(int minutes) {
         String token = getToken();
         return isTokenExpiringSoon(token, minutes);
     }
@@ -395,7 +389,7 @@ public class SecurityUtils {
         }
 
         String ip = null;
-        
+
         // 1. 从X-Forwarded-For头获取（代理服务器会设置）
         ip = request.getHeader("X-Forwarded-For");
         if (StringUtils.isNotBlank(ip) && !"unknown".equalsIgnoreCase(ip)) {
@@ -509,7 +503,7 @@ public class SecurityUtils {
         if (request == null) {
             return false;
         }
-        
+
         String requestedWith = request.getHeader("X-Requested-With");
         return "XMLHttpRequest".equals(requestedWith);
     }
@@ -540,12 +534,12 @@ public class SecurityUtils {
         if (SecurityContextHolder.isLogin()) {
             return true;
         }
-        
+
         // 检查Spring Security上下文
         Authentication authentication = getAuthentication();
-        return authentication != null && 
-               authentication.isAuthenticated() && 
-               !"anonymousUser".equals(authentication.getName());
+        return authentication != null &&
+                authentication.isAuthenticated() &&
+                !"anonymousUser".equals(authentication.getName());
     }
 
     /**
@@ -553,7 +547,7 @@ public class SecurityUtils {
      *
      * @return 登录用户信息，如果未登录则返回null
      */
-    public static LoginUser getLoginUser() {
+    public static LoginUserBody getLoginUser() {
         return SecurityContextHolder.getLoginUser();
     }
 
@@ -562,7 +556,7 @@ public class SecurityUtils {
      *
      * @param loginUser 登录用户信息
      */
-    public static void setLoginUser(LoginUser loginUser) {
+    public static void setLoginUser(LoginUserBody loginUser) {
         SecurityContextHolder.setLoginUser(loginUser);
     }
 
@@ -593,7 +587,7 @@ public class SecurityUtils {
      * @return 是否拥有任意一个权限
      */
     public static boolean hasAnyPermission(String... permissions) {
-        LoginUser loginUser = getLoginUser();
+        LoginUserBody loginUser = getLoginUser();
         return loginUser != null && loginUser.hasAnyPermission(permissions);
     }
 
@@ -604,7 +598,7 @@ public class SecurityUtils {
      * @return 是否拥有任意一个角色
      */
     public static boolean hasAnyRole(String... roles) {
-        LoginUser loginUser = getLoginUser();
+        LoginUserBody loginUser = getLoginUser();
         return loginUser != null && loginUser.hasAnyRole(roles);
     }
 
@@ -615,11 +609,11 @@ public class SecurityUtils {
      * @return 是否拥有所有权限
      */
     public static boolean hasAllPermissions(String... permissions) {
-        LoginUser loginUser = getLoginUser();
+        LoginUserBody loginUser = getLoginUser();
         if (loginUser == null || loginUser.getPermissions() == null) {
             return false;
         }
-        
+
         for (String permission : permissions) {
             if (!loginUser.hasPermission(permission)) {
                 return false;
@@ -635,11 +629,11 @@ public class SecurityUtils {
      * @return 是否拥有所有角色
      */
     public static boolean hasAllRoles(String... roles) {
-        LoginUser loginUser = getLoginUser();
+        LoginUserBody loginUser = getLoginUser();
         if (loginUser == null || loginUser.getRoles() == null) {
             return false;
         }
-        
+
         for (String role : roles) {
             if (!loginUser.hasRole(role)) {
                 return false;
