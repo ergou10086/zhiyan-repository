@@ -65,7 +65,7 @@ public class BaseException extends RuntimeException
         return module;
     }
 
-    public Integer getCode()
+    public String getCode()
     {
         return code;
     }

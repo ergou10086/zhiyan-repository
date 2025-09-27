@@ -73,7 +73,7 @@ public class ServiceException extends BaseException {
         return this;
     }
 
-    public Integer getCode() {
+    public Integer getIntegerCode() {
         return code;
     }
 

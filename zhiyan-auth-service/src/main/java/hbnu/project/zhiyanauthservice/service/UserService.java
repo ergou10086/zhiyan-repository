@@ -26,14 +26,6 @@ public interface UserService {
     R<UserDTO> register(RegisterBody registerBody);
 
     /**
-     * 用户登录
-     *
-     * @param loginBody 登录表单数据
-     * @return 登录结果，包含token信息
-     */
-    R<TokenDTO> login(LoginBody loginBody);
-
-    /**
      * 刷新token
      *
      * @param refreshToken 刷新token

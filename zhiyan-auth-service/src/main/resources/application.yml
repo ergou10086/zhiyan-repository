@@ -171,3 +171,9 @@ logging:
     rollingpolicy:
       max-file-size: 50MB
       max-history: 30
+
+
+  swagger:
+    enabled: true
+    title: "zhiyan平台的认证模块"
+    description: "用户的认证和权限管理"

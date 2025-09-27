@@ -7,26 +7,24 @@ import hbnu.project.zhiyanauthservice.model.entity.User;
 import hbnu.project.zhiyanauthservice.model.entity.UserRole;
 import hbnu.project.zhiyanauthservice.model.enums.SystemRole;
 import hbnu.project.zhiyanauthservice.model.enums.VerificationCodeType;
-import hbnu.project.zhiyanauthservice.model.form.LoginBody;
 import hbnu.project.zhiyanauthservice.model.form.RegisterBody;
 import hbnu.project.zhiyanauthservice.model.form.ResetPasswordBody;
 import hbnu.project.zhiyanauthservice.model.form.UserProfileUpdateBody;
 import hbnu.project.zhiyanauthservice.repository.RoleRepository;
 import hbnu.project.zhiyanauthservice.repository.UserRepository;
 import hbnu.project.zhiyanauthservice.repository.UserRoleRepository;
+import hbnu.project.zhiyanauthservice.mapper.MapperManager;
 import hbnu.project.zhiyanauthservice.service.AuthService;
 import hbnu.project.zhiyanauthservice.service.PermissionService;
 import hbnu.project.zhiyanauthservice.service.UserService;
 import hbnu.project.zhiyanauthservice.service.VerificationCodeService;
 import hbnu.project.zhiyancommon.constants.GeneralConstants;
 import hbnu.project.zhiyansecurity.utils.SecurityUtils;
-import hbnu.project.zhiyansecurity.mapper.SecurityMapperManager;
 import hbnu.project.zhiyancommon.domain.R;
 import hbnu.project.zhiyancommon.utils.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +53,7 @@ public class UserServiceImpl implements UserService {
     private final VerificationCodeService verificationCodeService;
     private final AuthService authService;
     private final PermissionService permissionService;
-    private final SecurityMapperManager mapperManager;
+    private final MapperManager mapperManager;
 
 
     /**
@@ -93,15 +91,8 @@ public class UserServiceImpl implements UserService {
             }
 
             // 4. 创建用户实体
-            User user = User.builder()
-                    .email(registerBody.getEmail())
-                    .name(registerBody.getName())
-                    .passwordHash(SecurityUtils.encryptPassword(registerBody.getPassword()))
-                    .title(registerBody.getTitle())
-                    .institution(registerBody.getInstitution())
-                    .isLocked(false)
-                    .isDeleted(false)
-                    .build();
+            String passwordHash = SecurityUtils.encryptPassword(registerBody.getPassword());
+            User user = mapperManager.convertFromRegisterBody(registerBody, passwordHash);
 
             // 5. 保存用户
             user = userRepository.save(user);
@@ -110,7 +101,7 @@ public class UserServiceImpl implements UserService {
             assignDefaultRole(user.getId());
 
             // 7. 构建返回的用户DTO
-            UserDTO userDTO = convertToUserDTO(user);
+            UserDTO userDTO = mapperManager.convertToUserDTO(user);
 
             log.info("用户注册成功 - 邮箱: {}, 用户ID: {}", registerBody.getEmail(), user.getId());
             return R.ok(userDTO, "注册成功");
@@ -120,55 +111,6 @@ public class UserServiceImpl implements UserService {
             return R.fail("注册失败，请稍后重试");
         }
     }
-
-
-    /**
-     * 用户登录
-     * 流程：用户验证 -> 密码校验 -> 账号状态检查 -> 生成Token -> 记录登录
-     *
-     * @param loginBody 登录表单数据
-     * @return 登录结果，包含token信息
-     */
-    @Override
-    public R<TokenDTO> login(LoginBody loginBody) {
-        try {
-            // 1. 根据邮箱查找用户
-            Optional<User> optionalUser = userRepository.findByEmailAndIsDeletedFalse(loginBody.getEmail());
-            if (optionalUser.isEmpty()) {
-                log.warn("用户登录失败 - 用户不存在: {}", loginBody.getEmail());
-                return R.fail("用户名或密码错误");
-            }
-
-            User user = optionalUser.get();
-
-            // 2. 密码校验
-            if (!SecurityUtils.matchesPassword(loginBody.getPassword(), user.getPasswordHash())) {
-                log.warn("用户登录失败 - 密码错误: {}", loginBody.getEmail());
-                return R.fail("用户名或密码错误");
-            }
-
-            // 3. 账号状态检查
-            if (user.getIsLocked()) {
-                log.warn("用户登录失败 - 账号被锁定: {}", loginBody.getEmail());
-                return R.fail("账号已被锁定，请联系管理员");
-            }
-
-            // 4. 生成Token
-            TokenDTO tokenDTO = authService.generateTokens(user.getId(), loginBody.getRememberMe());
-
-            // 5. 设置用户信息到Token中
-            UserDTO userDTO = convertToUserDTO(user);
-            tokenDTO.setUser(userDTO);
-
-            log.info("用户登录成功 - 邮箱: {}, 用户ID: {}", loginBody.getEmail(), user.getId());
-            return R.ok(tokenDTO, "登录成功");
-
-        } catch (Exception e) {
-            log.error("用户登录异常 - 邮箱: {}, 错误: {}", loginBody.getEmail(), e.getMessage(), e);
-            return R.fail("登录失败，请稍后重试");
-        }
-    }
-
 
     /**
      * 刷新token
@@ -200,7 +142,7 @@ public class UserServiceImpl implements UserService {
             TokenDTO tokenDTO = authService.generateTokens(userId, true);
 
             // 设置用户信息
-            UserDTO userDTO = convertToUserDTO(user);
+            UserDTO userDTO = mapperManager.convertToUserDTO(user);
             tokenDTO.setUser(userDTO);
 
             log.info("Token刷新成功 - 用户ID: {}", userId);
@@ -339,7 +281,7 @@ public class UserServiceImpl implements UserService {
                 return R.fail("用户不存在");
             }
 
-            UserDTO userDTO = convertToUserDTOWithRolesAndPermissions(optionalUser.get());
+            UserDTO userDTO = mapperManager.convertToUserDTOWithRolesAndPermissions(optionalUser.get());
             return R.ok(userDTO);
 
         } catch (Exception e) {
@@ -368,21 +310,10 @@ public class UserServiceImpl implements UserService {
             User user = optionalUser.get();
 
             // 更新用户信息
-            if (StringUtils.isNotBlank(updateBody.getName())) {
-                user.setName(updateBody.getName());
-            }
-            if (StringUtils.isNotBlank(updateBody.getTitle())) {
-                user.setTitle(updateBody.getTitle());
-            }
-            if (StringUtils.isNotBlank(updateBody.getInstitution())) {
-                user.setInstitution(updateBody.getInstitution());
-            }
-            if (StringUtils.isNotBlank(updateBody.getAvatarUrl())) {
-                user.setAvatarUrl(updateBody.getAvatarUrl());
-            }
+            mapperManager.updateUserProfile(user, updateBody);
 
             user = userRepository.save(user);
-            UserDTO userDTO = convertToUserDTO(user);
+            UserDTO userDTO = mapperManager.convertToUserDTO(user);
 
             log.info("用户资料更新成功 - 用户ID: {}", userId);
             return R.ok(userDTO, "资料更新成功");
@@ -413,9 +344,7 @@ public class UserServiceImpl implements UserService {
                 userPage = userRepository.findByIsDeletedFalse(pageable);
             }
 
-            List<UserDTO> userDTOs = userPage.getContent().stream()
-                    .map(this::convertToUserDTO)
-                    .collect(Collectors.toList());
+            List<UserDTO> userDTOs = mapperManager.convertToUserDTOList(userPage.getContent());
 
             Page<UserDTO> userDTOPage = new PageImpl<>(userDTOs, pageable, userPage.getTotalElements());
             return R.ok(userDTOPage);
@@ -500,7 +429,7 @@ public class UserServiceImpl implements UserService {
                 return R.fail("用户不存在");
             }
 
-            UserDTO userDTO = convertToUserDTOWithRolesAndPermissions(optionalUser.get());
+            UserDTO userDTO = mapperManager.convertToUserDTOWithRolesAndPermissions(optionalUser.get());
             return R.ok(userDTO);
 
         } catch (Exception e) {
@@ -537,43 +466,4 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    /**
-     * 将User实体转换为UserDTO
-     *
-     * @param user 用户实体
-     * @return UserDTO
-     */
-    private UserDTO convertToUserDTO(User user) {
-        UserDTO userDTO = new UserDTO();
-        BeanUtils.copyProperties(user, userDTO);
-        return userDTO;
-    }
-
-
-    /**
-     * 将User实体转换为包含角色和权限的UserDTO
-     *
-     * @param user 用户实体（包含角色和权限）
-     * @return UserDTO
-     */
-    private UserDTO convertToUserDTOWithRolesAndPermissions(User user) {
-        UserDTO userDTO = convertToUserDTO(user);
-
-        // 获取角色列表
-        if (user.getUserRoles() != null) {
-            List<String> roles = user.getUserRoles().stream()
-                    .map(ur -> ur.getRole().getName())
-                    .collect(Collectors.toList());
-            userDTO.setRoles(roles);
-
-            // 获取权限列表
-            Set<String> permissions = user.getUserRoles().stream()
-                    .flatMap(ur -> ur.getRole().getRolePermissions().stream())
-                    .map(rp -> rp.getPermission().getName())
-                    .collect(Collectors.toSet());
-            userDTO.setPermissions(new ArrayList<>(permissions));
-        }
-
-        return userDTO;
-    }
 }

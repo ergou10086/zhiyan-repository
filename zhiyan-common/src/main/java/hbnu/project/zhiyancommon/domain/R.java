@@ -1,6 +1,7 @@
 package hbnu.project.zhiyancommon.domain;
 
 import hbnu.project.zhiyancommon.constants.GeneralConstants ;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.io.Serializable;
 
@@ -9,6 +10,7 @@ import java.io.Serializable;
  *
  * @author Yui,asddjv
  */
+@Schema(description = "统一响应结果")
 public class R<T> implements Serializable
 {
     private static final long serialVersionUID = 1L;
@@ -19,10 +21,13 @@ public class R<T> implements Serializable
     /** 失败 */
     public static final int FAIL = GeneralConstants.FAIL;
 
+    @Schema(description = "响应码", example = "200")
     private int code;
 
+    @Schema(description = "响应消息", example = "操作成功")
     private String msg;
 
+    @Schema(description = "响应数据")
     private T data;
 
     public static <T> R<T> ok()
