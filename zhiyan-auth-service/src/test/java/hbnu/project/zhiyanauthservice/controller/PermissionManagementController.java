@@ -2,7 +2,6 @@ package hbnu.project.zhiyanauthservice.controller;
 
 import hbnu.project.zhiyanauthservice.model.dto.RoleDTO;
 import hbnu.project.zhiyanauthservice.model.enums.PermissionModule;
-import hbnu.project.zhiyanauthservice.model.enums.RoleTemplate;
 import hbnu.project.zhiyanauthservice.service.RoleService;
 import hbnu.project.zhiyanauthservice.utils.PermissionAssignmentUtil;
 import hbnu.project.zhiyancommon.domain.R;

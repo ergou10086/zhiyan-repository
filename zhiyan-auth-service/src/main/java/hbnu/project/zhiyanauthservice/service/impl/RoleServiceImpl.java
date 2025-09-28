@@ -8,7 +8,6 @@ import hbnu.project.zhiyanauthservice.model.entity.RolePermission;
 import hbnu.project.zhiyanauthservice.model.entity.User;
 import hbnu.project.zhiyanauthservice.model.entity.UserRole;
 import hbnu.project.zhiyanauthservice.model.enums.PermissionModule;
-import hbnu.project.zhiyanauthservice.model.enums.RoleTemplate;
 import hbnu.project.zhiyanauthservice.repository.PermissionRepository;
 import hbnu.project.zhiyanauthservice.repository.RolePermissionRepository;
 import hbnu.project.zhiyanauthservice.repository.RoleRepository;
@@ -37,6 +36,7 @@ import java.util.stream.Collectors;
 /**
  * 角色服务实现类
  * 处理角色管理和分配
+ * TODO：按照梳理好的要求重写
  *
  * @author ErgouTree
  */

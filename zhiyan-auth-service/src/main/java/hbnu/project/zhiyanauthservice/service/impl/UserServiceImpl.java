@@ -1,14 +1,7 @@
 package hbnu.project.zhiyanauthservice.service.impl;
 
-import hbnu.project.zhiyanauthservice.model.dto.TokenDTO;
 import hbnu.project.zhiyanauthservice.model.dto.UserDTO;
-import hbnu.project.zhiyanauthservice.model.entity.Role;
 import hbnu.project.zhiyanauthservice.model.entity.User;
-import hbnu.project.zhiyanauthservice.model.entity.UserRole;
-import hbnu.project.zhiyanauthservice.model.enums.SystemRole;
-import hbnu.project.zhiyanauthservice.model.enums.VerificationCodeType;
-import hbnu.project.zhiyanauthservice.model.form.RegisterBody;
-import hbnu.project.zhiyanauthservice.model.form.ResetPasswordBody;
 import hbnu.project.zhiyanauthservice.model.form.UserProfileUpdateBody;
 import hbnu.project.zhiyanauthservice.repository.RoleRepository;
 import hbnu.project.zhiyanauthservice.repository.UserRepository;
@@ -18,8 +11,6 @@ import hbnu.project.zhiyanauthservice.service.AuthService;
 import hbnu.project.zhiyanauthservice.service.PermissionService;
 import hbnu.project.zhiyanauthservice.service.UserService;
 import hbnu.project.zhiyanauthservice.service.VerificationCodeService;
-import hbnu.project.zhiyancommon.constants.GeneralConstants;
-import hbnu.project.zhiyansecurity.utils.SecurityUtils;
 import hbnu.project.zhiyancommon.domain.R;
 import hbnu.project.zhiyancommon.utils.StringUtils;
 
@@ -31,7 +22,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 

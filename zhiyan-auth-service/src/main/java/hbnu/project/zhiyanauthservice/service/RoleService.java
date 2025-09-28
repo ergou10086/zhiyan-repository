@@ -3,7 +3,6 @@ package hbnu.project.zhiyanauthservice.service;
 import hbnu.project.zhiyanauthservice.model.dto.RoleDTO;
 import hbnu.project.zhiyanauthservice.model.entity.Role;
 import hbnu.project.zhiyanauthservice.model.enums.PermissionModule;
-import hbnu.project.zhiyanauthservice.model.enums.RoleTemplate;
 import hbnu.project.zhiyanauthservice.utils.PermissionAssignmentUtil;
 import hbnu.project.zhiyancommon.domain.R;
 import org.springframework.data.domain.Page;

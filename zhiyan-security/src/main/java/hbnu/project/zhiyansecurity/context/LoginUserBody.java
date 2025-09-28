@@ -4,11 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 登录用户信息上下文对象
@@ -20,7 +23,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginUserBody implements Serializable {
+public class LoginUserBody implements UserDetails, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -95,6 +98,16 @@ public class LoginUserBody implements Serializable {
     private LocalDateTime expireTime;
 
     /**
+     * 密码哈希值（用于Spring Security认证）
+     */
+    private String passwordHash;
+
+    /**
+     * Spring Security权限集合
+     */
+    private Collection<? extends GrantedAuthority> authorities;
+
+    /**
      * 判断用户是否拥有指定权限
      *
      * @param permission 权限标识
@@ -167,6 +180,67 @@ public class LoginUserBody implements Serializable {
      */
     public boolean isAccountNonLocked() {
         return isLocked == null || !isLocked;
+    }
+
+    // ==================== UserDetails接口实现 ====================
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (authorities != null) {
+            return authorities;
+        }
+        
+        // 从角色和权限构建权限集合
+        Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
+        
+        // 添加角色权限（以ROLE_开头）
+        if (roles != null) {
+            grantedAuthorities.addAll(roles.stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .collect(Collectors.toSet()));
+        }
+        
+        // 添加具体权限
+        if (permissions != null) {
+            grantedAuthorities.addAll(permissions.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toSet()));
+        }
+        
+        return grantedAuthorities;
+    }
+
+    @Override
+    public String getPassword() {
+        return passwordHash;
+    }
+
+
+    @Override
+    public String getUsername() {
+        // 使用邮箱作为用户名
+        return email;
+    }
+
+
+    @Override
+    public boolean isAccountNonExpired() {
+        // 账户永不过期，可根据业务需求调整
+        return true;
+    }
+
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        // 凭证永不过期，可根据业务需求调整
+        return true;
+    }
+
+
+    @Override
+    public boolean isEnabled() {
+        // 账户未锁定则启用
+        return !Boolean.TRUE.equals(isLocked);
     }
 }
 

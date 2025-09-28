@@ -3,10 +3,7 @@ package hbnu.project.zhiyanauthservice.service.impl;
 import hbnu.project.zhiyanauthservice.mapper.MapperManager;
 import hbnu.project.zhiyanauthservice.model.dto.TokenDTO;
 import hbnu.project.zhiyanauthservice.model.dto.UserDTO;
-import hbnu.project.zhiyanauthservice.model.entity.Role;
 import hbnu.project.zhiyanauthservice.model.entity.User;
-import hbnu.project.zhiyanauthservice.model.entity.UserRole;
-import hbnu.project.zhiyanauthservice.model.enums.SystemRole;
 import hbnu.project.zhiyanauthservice.model.enums.VerificationCodeType;
 import hbnu.project.zhiyanauthservice.model.form.LoginBody;
 import hbnu.project.zhiyanauthservice.model.form.RegisterBody;
@@ -25,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /**
@@ -218,20 +214,13 @@ public class SysLoginServiceImpl implements SysLoginService {
 
 
     /**
-     * 为新用户分配默认角色
+     * 为注册新用户分配默认系统角色——普通用户
      * 
      * @param userId 用户ID
      */
     private void assignDefaultRole(Long userId) {
         try {
-            // 查找默认角色（普通用户）
-            Optional<Role> defaultRole = roleRepository.findByName(SystemRole.USER.getRoleName());
-            if (defaultRole.isPresent()) {
-                // TODO：
-                log.info("为用户分配默认角色成功 - 用户ID: {}", userId);
-            } else {
-                log.warn("默认角色不存在，无法为用户分配角色 - 用户ID: {}", userId);
-            }
+
         } catch (Exception e) {
             log.error("分配默认角色失败 - 用户ID: {}, 错误: {}", userId, e.getMessage(), e);
         }

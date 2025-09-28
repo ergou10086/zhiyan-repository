@@ -4,7 +4,6 @@ import hbnu.project.zhiyanauthservice.model.entity.Permission;
 import hbnu.project.zhiyanauthservice.model.entity.Role;
 import hbnu.project.zhiyanauthservice.model.entity.RolePermission;
 import hbnu.project.zhiyanauthservice.model.enums.PermissionModule;
-import hbnu.project.zhiyanauthservice.model.enums.RoleTemplate;
 import hbnu.project.zhiyanauthservice.model.enums.SystemPermission;
 import hbnu.project.zhiyanauthservice.repository.PermissionRepository;
 import hbnu.project.zhiyanauthservice.repository.RolePermissionRepository;
