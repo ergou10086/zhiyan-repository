@@ -2,6 +2,7 @@ package hbnu.project.zhiyanauthservice.service;
 
 import hbnu.project.zhiyanauthservice.model.dto.TokenDTO;
 import hbnu.project.zhiyanauthservice.model.dto.UserDTO;
+import hbnu.project.zhiyanauthservice.model.entity.User;
 import hbnu.project.zhiyanauthservice.model.form.LoginBody;
 import hbnu.project.zhiyanauthservice.model.form.RegisterBody;
 import hbnu.project.zhiyanauthservice.model.form.ResetPasswordBody;
@@ -10,6 +11,8 @@ import hbnu.project.zhiyancommon.domain.R;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 /**
  * 用户服务接口
  * 提供用户管理、认证、权限等核心功能
@@ -17,48 +20,6 @@ import org.springframework.data.domain.Pageable;
  * @author ErgouTree
  */
 public interface UserService {
-    /**
-     * 用户注册
-     *
-     * @param registerBody 注册表单数据
-     * @return 注册结果
-     */
-    R<UserDTO> register(RegisterBody registerBody);
-
-    /**
-     * 刷新token
-     *
-     * @param refreshToken 刷新token
-     * @return 新的token信息
-     */
-    R<TokenDTO> refreshToken(String refreshToken);
-
-    /**
-     * 用户登出
-     *
-     * @param userId 用户ID
-     * @param token 当前token
-     * @return 登出结果
-     */
-    R<Void> logout(Long userId, String token);
-
-    /**
-     * 重置密码
-     *
-     * @param resetPasswordBody 重置密码表单
-     * @return 重置结果
-     */
-    R<Void> resetPassword(ResetPasswordBody resetPasswordBody);
-
-    /**
-     * 修改密码
-     *
-     * @param userId 用户ID
-     * @param oldPassword 旧密码
-     * @param newPassword 新密码
-     * @return 修改结果
-     */
-    R<Void> changePassword(Long userId, String oldPassword, String newPassword);
 
     /**
      * 获取当前用户信息

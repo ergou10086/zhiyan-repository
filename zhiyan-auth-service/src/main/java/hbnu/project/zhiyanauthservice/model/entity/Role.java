@@ -1,5 +1,6 @@
 package hbnu.project.zhiyanauthservice.model.entity;
 
+import hbnu.project.zhiyancommon.annotation.LongToString;
 import hbnu.project.zhiyancommon.utils.id.SnowflakeIdUtil;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,6 +29,7 @@ public class Role extends BaseAuditEntity{
      * 雪花id
      */
     @Id
+    @LongToString
     @Column(name = "id", nullable = false, columnDefinition = "BIGINT COMMENT '角色唯一标识（雪花ID）'")
     private Long id;
 

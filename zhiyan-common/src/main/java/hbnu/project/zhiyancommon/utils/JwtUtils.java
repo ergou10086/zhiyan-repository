@@ -25,7 +25,7 @@ import java.util.Map;
 @Component
 public class JwtUtils {
 
-    @Value("${jwt.secret:zhiyan-platform-secret-key-2024}")
+    @Value("${jwt.secret:zhiyan-platform-secret-key-2025}")
     private String secret;
 
     @Value("${jwt.issuer:zhiyan-platform}")

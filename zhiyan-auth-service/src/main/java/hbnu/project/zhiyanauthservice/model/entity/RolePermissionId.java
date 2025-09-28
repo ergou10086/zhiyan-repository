@@ -1,5 +1,6 @@
 package hbnu.project.zhiyanauthservice.model.entity;
 
+import hbnu.project.zhiyancommon.annotation.LongToString;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,9 +15,11 @@ import lombok.*;
 @AllArgsConstructor
 public class RolePermissionId implements java.io.Serializable {
 
+    @LongToString
     @Column(name = "role_id")
     private Long roleId;
 
+    @LongToString
     @Column(name = "permission_id")
     private Long permissionId;
 }

@@ -28,6 +28,7 @@ public class SecurityConfig implements WebMvcConfigurer {
         return new BCryptPasswordEncoder();
     }
 
+
     /**
      * 请求头拦截器Bean
      *
@@ -37,6 +38,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     public HeaderInterceptor headerInterceptor() {
         return new HeaderInterceptor();
     }
+
 
     /**
      * 注册拦截器

@@ -26,6 +26,14 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
     Optional<Permission> findByName(String name);
 
     /**
+     * 根据权限名称列表批量查找权限
+     *
+     * @param names 权限名称列表
+     * @return 权限列表
+     */
+    List<Permission> findByNameIn(List<String> names);
+
+    /**
      * 检查权限名称是否已存在
      *
      * @param name 权限名称

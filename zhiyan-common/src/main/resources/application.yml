@@ -53,6 +53,13 @@ spring:
       fail-on-unknown-properties: false
     default-property-inclusion: non_null
 
+# 自定义配置
+zhiyan:
+  jackson:
+    # 全局Long转String配置，默认开启
+    # 设置为false时，只有使用@LongToString注解的字段才会转换
+    long-to-string-global: true
+
 
 # Actuator监控配置
 management:

@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**
@@ -54,217 +53,6 @@ public class UserServiceImpl implements UserService {
     private final AuthService authService;
     private final PermissionService permissionService;
     private final MapperManager mapperManager;
-
-
-    /**
-     * 用户注册
-     * 流程：验证码校验 -> 邮箱重复检查 -> 密码确认校验 -> 密码加密 -> 创建用户 -> 分配默认角色
-     *
-     * @param registerBody 注册表单数据
-     * @return 注册结果
-     */
-    @Override
-    @Transactional
-    public R<UserDTO> register(RegisterBody registerBody) {
-        try {
-            // 1. 验证码校验
-            R<Boolean> codeValidation = verificationCodeService.validateCode(
-                    registerBody.getEmail(),
-                    registerBody.getVerificationCode(),
-                    VerificationCodeType.REGISTER
-            );
-
-            if (!codeValidation.getData() || !GeneralConstants.SUCCESS.equals(codeValidation.getCode())) {
-                log.warn("用户注册失败 - 验证码校验失败: {}", registerBody.getEmail());
-                return R.fail("验证码验证失败");
-            }
-
-            // 2. 检查邮箱是否已存在
-            if (userRepository.existsByEmail(registerBody.getEmail())) {
-                log.warn("用户注册失败 - 邮箱已存在: {}", registerBody.getEmail());
-                return R.fail("该邮箱已被注册");
-            }
-
-            // 3. 密码确认校验
-            if (!registerBody.getPassword().equals(registerBody.getConfirmPassword())) {
-                return R.fail("两次输入的密码不一致");
-            }
-
-            // 4. 创建用户实体
-            String passwordHash = SecurityUtils.encryptPassword(registerBody.getPassword());
-            User user = mapperManager.convertFromRegisterBody(registerBody, passwordHash);
-
-            // 5. 保存用户
-            user = userRepository.save(user);
-
-            // 6. 为新用户分配默认角色（普通用户）
-            assignDefaultRole(user.getId());
-
-            // 7. 构建返回的用户DTO
-            UserDTO userDTO = mapperManager.convertToUserDTO(user);
-
-            log.info("用户注册成功 - 邮箱: {}, 用户ID: {}", registerBody.getEmail(), user.getId());
-            return R.ok(userDTO, "注册成功");
-
-        } catch (Exception e) {
-            log.error("用户注册异常 - 邮箱: {}, 错误: {}", registerBody.getEmail(), e.getMessage(), e);
-            return R.fail("注册失败，请稍后重试");
-        }
-    }
-
-    /**
-     * 刷新token
-     *
-     * @param refreshToken 刷新token
-     * @return 新的token信息
-     */
-    @Override
-    public R<TokenDTO> refreshToken(String refreshToken) {
-        try {
-            // 验证refreshToken并获取用户ID
-            Long userId = authService.validateToken(refreshToken);
-            if (userId == null) {
-                return R.fail("刷新令牌无效或已过期");
-            }
-
-            // 检查用户是否存在且未被删除
-            Optional<User> optionalUser = userRepository.findByIdAndIsDeletedFalse(userId);
-            if (optionalUser.isEmpty()) {
-                return R.fail("用户不存在");
-            }
-
-            User user = optionalUser.get();
-            if (user.getIsLocked()) {
-                return R.fail("账号已被锁定");
-            }
-
-            // 生成新的Token
-            TokenDTO tokenDTO = authService.generateTokens(userId, true);
-
-            // 设置用户信息
-            UserDTO userDTO = mapperManager.convertToUserDTO(user);
-            tokenDTO.setUser(userDTO);
-
-            log.info("Token刷新成功 - 用户ID: {}", userId);
-            return R.ok(tokenDTO, "Token刷新成功");
-
-        } catch (Exception e) {
-            log.error("Token刷新异常 - 错误: {}", e.getMessage(), e);
-            return R.fail("Token刷新失败");
-        }
-    }
-
-
-    /**
-     * 用户登出
-     *
-     * @param userId 用户ID
-     * @param token 当前token
-     * @return 登出结果
-     */
-    @Override
-    public R<Void> logout(Long userId, String token) {
-        try {
-            // 将token加入黑名单
-            authService.blacklistToken(token, userId);
-
-            log.info("用户登出成功 - 用户ID: {}", userId);
-            return R.ok(null, "登出成功");
-
-        } catch (Exception e) {
-            log.error("用户登出异常 - 用户ID: {}, 错误: {}", userId, e.getMessage(), e);
-            return R.fail("登出失败");
-        }
-    }
-
-
-    /**
-     * 重置密码
-     *
-     * @param resetPasswordBody 重置密码表单
-     * @return 重置结果
-     */
-    @Override
-    @Transactional
-    public R<Void> resetPassword(ResetPasswordBody resetPasswordBody) {
-        try {
-            // 1. 验证码校验
-            R<Boolean> codeValidation = verificationCodeService.validateCode(
-                    resetPasswordBody.getEmail(),
-                    resetPasswordBody.getVerificationCode(),
-                    VerificationCodeType.RESET_PASSWORD
-            );
-
-            if (!codeValidation.getData() || !GeneralConstants.SUCCESS.equals(codeValidation.getCode())) {
-                log.warn("密码重置失败 - 验证码校验失败: {}", resetPasswordBody.getEmail());
-                return R.fail("验证码验证失败");
-            }
-
-            // 2. 密码确认校验
-            if (!resetPasswordBody.getNewPassword().equals(resetPasswordBody.getConfirmPassword())) {
-                return R.fail("两次输入的密码不一致");
-            }
-
-            // 3. 查找用户
-            Optional<User> optionalUser = userRepository.findByEmailAndIsDeletedFalse(resetPasswordBody.getEmail());
-            if (optionalUser.isEmpty()) {
-                log.warn("密码重置失败 - 用户不存在: {}", resetPasswordBody.getEmail());
-                return R.fail("用户不存在");
-            }
-
-            // 4. 更新密码
-            User user = optionalUser.get();
-            user.setPasswordHash(SecurityUtils.encryptPassword(resetPasswordBody.getNewPassword()));
-            userRepository.save(user);
-
-            log.info("密码重置成功 - 邮箱: {}", resetPasswordBody.getEmail());
-            return R.ok(null, "密码重置成功");
-
-        } catch (Exception e) {
-            log.error("密码重置异常 - 邮箱: {}, 错误: {}", resetPasswordBody.getEmail(), e.getMessage(), e);
-            return R.fail("密码重置失败，请稍后重试");
-        }
-    }
-
-
-    /**
-     * 修改密码
-     *
-     * @param userId 用户ID
-     * @param oldPassword 旧密码
-     * @param newPassword 新密码
-     * @return 修改结果
-     */
-    @Override
-    @Transactional
-    public R<Void> changePassword(Long userId, String oldPassword, String newPassword) {
-        try {
-            // 1. 查找用户
-            Optional<User> optionalUser = userRepository.findByIdAndIsDeletedFalse(userId);
-            if (optionalUser.isEmpty()) {
-                return R.fail("用户不存在");
-            }
-
-            User user = optionalUser.get();
-
-            // 2. 验证旧密码
-            if (!SecurityUtils.matchesPassword(oldPassword, user.getPasswordHash())) {
-                log.warn("修改密码失败 - 旧密码错误: 用户ID {}", userId);
-                return R.fail("原密码错误");
-            }
-
-            // 3. 更新密码
-            user.setPasswordHash(SecurityUtils.encryptPassword(newPassword));
-            userRepository.save(user);
-
-            log.info("密码修改成功 - 用户ID: {}", userId);
-            return R.ok(null, "密码修改成功");
-
-        } catch (Exception e) {
-            log.error("密码修改异常 - 用户ID: {}, 错误: {}", userId, e.getMessage(), e);
-            return R.fail("密码修改失败，请稍后重试");
-        }
-    }
 
 
     /**
@@ -386,6 +174,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     /**
      * 软删除用户
      *
@@ -437,33 +226,4 @@ public class UserServiceImpl implements UserService {
             return R.fail("获取用户信息失败");
         }
     }
-
-
-    /**
-     * 为新用户分配默认角色
-     *
-     * @param userId 用户ID
-     */
-    private void assignDefaultRole(Long userId) {
-        try {
-            // 查找默认角色（普通用户）
-            Optional<Role> defaultRole = roleRepository.findByName(SystemRole.USER.getRoleName());
-            if (defaultRole.isPresent()) {
-                UserRole userRole = UserRole.builder()
-                        .user(User.builder().id(userId).build())
-                        .role(defaultRole.get())
-                        .assignedAt(LocalDateTime.now())
-                        .build();
-
-                userRoleRepository.save(userRole);
-                log.info("为用户分配默认角色成功 - 用户ID: {}", userId);
-            } else {
-                log.warn("默认角色不存在，无法为用户分配角色 - 用户ID: {}", userId);
-            }
-        } catch (Exception e) {
-            log.error("分配默认角色失败 - 用户ID: {}, 错误: {}", userId, e.getMessage(), e);
-        }
-    }
-
-
 }

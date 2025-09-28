@@ -8,6 +8,7 @@ import hbnu.project.zhiyancommon.utils.StringUtils;
  * @author ErgouTree
  */
 public class EscapeUtils {
+
     public static final String RE_HTML_MARK = "(<[^<]*?>)|(<[\\s]*?/[^<]*?>)|(<[^<]*?/[\\s]*?>)";
 
     private static final char[][] TEXT = new char[64][];

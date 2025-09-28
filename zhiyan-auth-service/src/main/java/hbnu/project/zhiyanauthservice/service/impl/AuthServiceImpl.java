@@ -39,6 +39,10 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 发送验证码
+     * 根据请求参数中的邮箱和验证码类型，生成并发送相应的验证码
+     *
+     * @param verificationCodeBody 包含邮箱和验证码类型的请求体
+     * @return 操作结果，成功或失败信息
      */
     @Override
     public R<Void> sendVerificationCode(VerificationCodeBody verificationCodeBody) {
@@ -55,6 +59,12 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 验证验证码
+     * 检查用户输入的验证码是否与系统生成的一致
+     *
+     * @param email 接收验证码的邮箱
+     * @param code 用户输入的验证码
+     * @param type 验证码类型（字符串形式）
+     * @return 验证结果，true表示验证通过，false表示失败
      */
     @Override
     public R<Boolean> verifyCode(String email, String code, String type) {
@@ -69,12 +79,18 @@ public class AuthServiceImpl implements AuthService {
 
 
     /**
-     * 生成JWT令牌
+     * 生成JWT令牌对（访问令牌和刷新令牌）
+     * 根据用户ID和"记住我"选项生成不同过期时间的令牌
+     *
+     * @param userId 用户ID
+     * @param rememberMe 是否记住我（影响令牌过期时间）
+     * @return 包含访问令牌、刷新令牌及相关信息的DTO对象
      */
     @Override
     public TokenDTO generateTokens(Long userId, boolean rememberMe) {
         try {
             // 根据记住我选项确定过期时间（分钟）
+            // 访问令牌过期时间：默认较短，记住我时较长
             int accessTokenExpireMinutes = rememberMe ? 
                 TokenConstants.REMEMBER_ME_REFRESH_TOKEN_EXPIRE_MINUTES : TokenConstants.DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES;
             int refreshTokenExpireMinutes = rememberMe ? 
@@ -82,18 +98,19 @@ public class AuthServiceImpl implements AuthService {
             
             // 生成访问令牌
             String accessToken = jwtUtils.createToken(userId.toString(), accessTokenExpireMinutes);
-            
-            // 生成刷新令牌（使用更长的过期时间）
+
+            // 生成刷新令牌（长期有效，用于获取新的访问令牌）
             String refreshToken = jwtUtils.createToken(userId.toString(), refreshTokenExpireMinutes);
-            
+
+            // 构建令牌DTO对象
             TokenDTO tokenDTO = new TokenDTO();
             tokenDTO.setAccessToken(accessToken);
             tokenDTO.setRefreshToken(refreshToken);
             tokenDTO.setTokenType(TokenConstants.TOKEN_TYPE_BEARER);
             // 转换为秒
             tokenDTO.setExpiresIn((long) accessTokenExpireMinutes * 60);
-            
-            // 将token存储到Redis中，用于校验和管理（记住我情况下使用更长的缓存时间）
+
+            // 将访问令牌存储到Redis，用于后续校验和管理
             String tokenKey = CacheConstants.USER_TOKEN_PREFIX + userId;
             long cacheTimeSeconds = (long) accessTokenExpireMinutes * 60;
             redisService.setCacheObject(tokenKey, accessToken, cacheTimeSeconds, TimeUnit.SECONDS);
@@ -109,17 +126,22 @@ public class AuthServiceImpl implements AuthService {
 
 
     /**
-     * 验证JWT令牌
+     * 验证JWT令牌的有效性
+     * 检查令牌是否合法、未过期，并解析出用户ID
+     *
+     * @param token 待验证的JWT令牌
+     * @return 验证通过返回用户ID，否则返回null
      */
     @Override
-    public Long validateToken(String token) {
+    public String validateToken(String token) {
         try {
+            // 先通过JWT工具类验证令牌格式和签名
             if (!jwtUtils.validateToken(token)) {
                 return null;
             }
-            
-            String userIdStr = jwtUtils.parseToken(token);
-            return Long.parseLong(userIdStr);
+
+            // 解析令牌获取用户ID字符串
+            return jwtUtils.parseToken(token);
             
         } catch (Exception e) {
             log.debug("JWT令牌验证失败 - token: {}, 错误: {}", token, e.getMessage());
@@ -164,48 +186,6 @@ public class AuthServiceImpl implements AuthService {
         } catch (Exception e) {
             log.debug("检查token黑名单状态失败 - token: {}, 错误: {}", token, e.getMessage());
             return false;
-        }
-    }
-
-
-    /**
-     * 修改邮箱
-     */
-    @Override
-    public R<Void> changeEmail(Long userId, ChangeEmailBody changeEmailBody) {
-        try {
-            // 1. 验证新邮箱的验证码
-            R<Boolean> codeValidation = verificationCodeService.validateCode(
-                changeEmailBody.getNewEmail(),
-                changeEmailBody.getVerificationCode(),
-                VerificationCodeType.CHANGE_EMAIL
-            );
-            
-            if (!codeValidation.getData()) {
-                return R.fail("验证码验证失败");
-            }
-            
-            // 2. 检查新邮箱是否已被使用
-            if (userRepository.existsByEmail(changeEmailBody.getNewEmail())) {
-                return R.fail("该邮箱已被其他用户使用");
-            }
-            
-            // 3. 更新用户邮箱
-            Optional<User> optionalUser = userRepository.findById(userId);
-            if (optionalUser.isEmpty()) {
-                return R.fail("用户不存在");
-            }
-            
-            User user = optionalUser.get();
-            user.setEmail(changeEmailBody.getNewEmail());
-            userRepository.save(user);
-            
-            log.info("用户邮箱修改成功 - 用户ID: {}, 新邮箱: {}", userId, changeEmailBody.getNewEmail());
-            return R.ok(null, "邮箱修改成功");
-            
-        } catch (Exception e) {
-            log.error("修改邮箱失败 - 用户ID: {}, 错误: {}", userId, e.getMessage(), e);
-            return R.fail("修改邮箱失败，请稍后重试");
         }
     }
 }

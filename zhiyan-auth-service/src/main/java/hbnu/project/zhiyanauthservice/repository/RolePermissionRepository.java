@@ -1,5 +1,6 @@
 package hbnu.project.zhiyanauthservice.repository;
 
+import hbnu.project.zhiyanauthservice.model.entity.Role;
 import hbnu.project.zhiyanauthservice.model.entity.RolePermission;
 import hbnu.project.zhiyanauthservice.model.entity.RolePermissionId;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -64,4 +65,22 @@ public interface RolePermissionRepository extends JpaRepository<RolePermission, 
     @Modifying
     @Query("DELETE FROM RolePermission rp WHERE rp.role.id = :roleId AND rp.permission.id = :permissionId")
     int deleteByRoleIdAndPermissionId(@Param("roleId") Long roleId, @Param("permissionId") Long permissionId);
+
+    /**
+     * 根据角色查找角色权限关联列表
+     *
+     * @param role 角色对象
+     * @return 角色权限关联列表
+     */
+    List<RolePermission> findByRole(Role role);
+
+    /**
+     * 根据角色和权限名称列表查找角色权限关联
+     *
+     * @param role            角色对象
+     * @param permissionNames 权限名称列表
+     * @return 角色权限关联列表
+     */
+    @Query("SELECT rp FROM RolePermission rp WHERE rp.role = :role AND rp.permission.name IN :permissionNames")
+    List<RolePermission> findByRoleAndPermissionNameIn(@Param("role") Role role, @Param("permissionNames") List<String> permissionNames);
 }

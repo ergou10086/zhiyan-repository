@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 系统权限管理控制器
- * 权限的CURD,查看拥有某权限的角色列表等
+ * 进行权限的CURD,查看拥有某权限的角色列表等
  *
  * @author ErgouTree
  */

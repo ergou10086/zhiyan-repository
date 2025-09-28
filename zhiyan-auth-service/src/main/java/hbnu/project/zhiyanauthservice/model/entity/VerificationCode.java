@@ -1,6 +1,7 @@
 package hbnu.project.zhiyanauthservice.model.entity;
 
 import hbnu.project.zhiyanauthservice.model.enums.VerificationCodeType;
+import hbnu.project.zhiyancommon.annotation.LongToString;
 import hbnu.project.zhiyancommon.utils.id.SnowflakeIdUtil;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -28,6 +29,7 @@ public class VerificationCode {
      * 雪花id
      */
     @Id
+    @LongToString
     @Column(name = "id", nullable = false, columnDefinition = "BIGINT COMMENT '验证码唯一标识（雪花ID）'")
     private Long id;
 

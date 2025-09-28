@@ -6,7 +6,6 @@ import hbnu.project.zhiyanauthservice.model.entity.Permission;
 import hbnu.project.zhiyanauthservice.repository.PermissionRepository;
 import hbnu.project.zhiyanauthservice.service.PermissionService;
 import hbnu.project.zhiyancommon.domain.R;
-import hbnu.project.zhiyancommon.exception.ServiceException;
 import hbnu.project.zhiyancommon.service.RedisService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,8 @@ import java.util.stream.Collectors;
 
 /**
  * 权限服务实现类
- * 处理权限管理和验证
+ * 负责权限的CRUD操作、用户权限校验、权限缓存管理等核心业务逻辑
+ * 采用"缓存优先"策略提升权限查询性能，权限变更时同步清理缓存保证数据一致性   ——yui
  *
  * @author ErgouTree
  */
@@ -41,8 +41,18 @@ public class PermissionServiceImpl implements PermissionService {
     // 缓存相关常量
     private static final String USER_PERMISSIONS_CACHE_PREFIX = "user:permissions:";
     private static final String PERMISSION_CACHE_PREFIX = "permission:";
-    private static final long CACHE_EXPIRE_TIME = 1800L; // 30分钟
+    // 30分钟过期
+    private static final long CACHE_EXPIRE_TIME = 1800L;
 
+
+    /**
+     * 校验用户是否拥有指定权限
+     * 采用"缓存优先"策略：先查缓存，缓存未命中则查数据库并更新缓存
+     *
+     * @param userId     用户ID（不能为空）
+     * @param permission 待校验的权限名称（不能为空）
+     * @return R<Boolean> - 校验结果：true=拥有权限，false=无权限；失败时返回错误信息
+     */
     @Override
     public R<Boolean> hasPermission(Long userId, String permission) {
         try {
@@ -55,6 +65,7 @@ public class PermissionServiceImpl implements PermissionService {
             if (userPermissions == null) {
                 // 缓存未命中，从数据库查询
                 List<Permission> permissions = permissionRepository.findAllByUserId(userId);
+                // 转set去重
                 userPermissions = permissions.stream()
                         .map(Permission::getName)
                         .collect(Collectors.toSet());
@@ -63,6 +74,7 @@ public class PermissionServiceImpl implements PermissionService {
                 cacheUserPermissions(userId, userPermissions);
             }
 
+            // 判断用户权限集合中是否包含目标权限
             boolean hasPermission = userPermissions.contains(permission);
             log.debug("检查用户[{}]是否拥有权限[{}]: {}", userId, permission, hasPermission);
             
@@ -73,6 +85,14 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+    /**
+     * 获取用户的所有权限列表
+     * 与hasPermission共享缓存逻辑，避免重复查询
+     *
+     * @param userId 用户ID（不能为空）
+     * @return R<Set<String>> - 成功返回用户的权限名称集合；失败返回错误信息
+     */
     @Override
     public R<Set<String>> getUserPermissions(Long userId) {
         try {
@@ -101,6 +121,15 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+    /**
+     * 校验用户是否拥有指定权限列表中的任一权限
+     * 常用于"满足一个权限即可访问"的场景（如：管理员/操作员均可操作）
+     *
+     * @param userId      用户ID
+     * @param permissions 待校验的权限列表（不能为空）
+     * @return R<Boolean> - 校验结果：true=拥有任一权限，false=无任一权限
+     */
     @Override
     public R<Boolean> hasAnyPermission(Long userId, List<String> permissions) {
         try {
@@ -108,7 +137,7 @@ public class PermissionServiceImpl implements PermissionService {
                 return R.ok(false);
             }
 
-            // 获取用户所有权限
+            // 调用getUserPermissions获取用户所有权限
             R<Set<String>> userPermissionsResult = getUserPermissions(userId);
             if (!R.isSuccess(userPermissionsResult)) {
                 return R.fail("获取用户权限失败");
@@ -128,6 +157,14 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+    /**
+     * 分页查询所有权限（管理员后台常用）
+     * 支持分页、排序，返回DTO对象避免暴露数据库实体细节
+     *
+     * @param pageable 分页参数（包含页码、页大小、排序规则）
+     * @return R<Page<PermissionDTO>> - 分页后的权限DTO列表
+     */
     @Override
     public R<Page<PermissionDTO>> getAllPermissions(Pageable pageable) {
         try {
@@ -145,6 +182,15 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+
+    /**
+     * 创建新权限（高级别管理员操作）
+     * 包含权限名称唯一性校验，事务控制确保数据一致性，创建后清理相关缓存
+     *
+     * @param permissionDTO 权限DTO（包含权限名称、描述等信息）
+     * @return R<PermissionDTO> - 成功返回创建后的权限DTO；失败返回错误信息
+     */
     @Override
     @Transactional
     public R<PermissionDTO> createPermission(PermissionDTO permissionDTO) {
@@ -153,15 +199,17 @@ public class PermissionServiceImpl implements PermissionService {
                 return R.fail("权限信息不完整");
             }
 
-            // 检查权限名称是否已存在
+            // 校验权限名称唯一性：避免重复创建相同名称的权限
             if (permissionRepository.existsByName(permissionDTO.getName())) {
                 return R.fail("权限名称已存在: " + permissionDTO.getName());
             }
 
-            // 转换为实体并保存
+            // DTO转换为数据库实体（Permission）
             Permission permission = mapperManager.convertFromPermissionDTO(permissionDTO);
+            // 保存实体到数据库，返回保存后的实体
             Permission savedPermission = permissionRepository.save(permission);
 
+            // 实体转换为DTO，返回给前端
             PermissionDTO result = mapperManager.convertToPermissionDTO(savedPermission);
             
             // 清理相关缓存
@@ -175,6 +223,15 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+    /**
+     * 更新已有权限（管理员操作）
+     * 包含权限存在性校验、名称唯一性校验，更新后清理权限缓存和所有用户权限缓存
+     *
+     * @param permissionId 待更新的权限ID
+     * @param permissionDTO 新的权限信息（DTO）
+     * @return R<PermissionDTO> - 成功返回更新后的权限DTO；失败返回错误信息
+     */
     @Override
     @Transactional
     public R<PermissionDTO> updatePermission(Long permissionId, PermissionDTO permissionDTO) {
@@ -183,9 +240,9 @@ public class PermissionServiceImpl implements PermissionService {
                 return R.fail("权限ID和权限信息不能为空");
             }
 
+            // 校验权限是否存在
             Permission existingPermission = permissionRepository.findById(permissionId)
                     .orElse(null);
-            
             if (existingPermission == null) {
                 return R.fail("权限不存在: " + permissionId);
             }
@@ -198,10 +255,12 @@ public class PermissionServiceImpl implements PermissionService {
                 }
             }
 
-            // 更新权限信息
+            // 更新实体信息：将DTO中的非空字段更新到现有实体
             mapperManager.updatePermission(existingPermission, permissionDTO);
+            // 保存更新
             Permission updatedPermission = permissionRepository.save(existingPermission);
 
+            // 实体转换为DTO返回
             PermissionDTO result = mapperManager.convertToPermissionDTO(updatedPermission);
             
             // 清理相关缓存
@@ -216,6 +275,14 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+    /**
+     * 删除权限（管理员操作）
+     * 包含权限存在性校验、关联角色校验（有角色关联时禁止删除），删除后清理缓存
+     *
+     * @param permissionId 待删除的权限ID
+     * @return R<Void> - 成功返回"权限删除成功"；失败返回错误信息
+     */
     @Override
     @Transactional
     public R<Void> deletePermission(Long permissionId) {
@@ -224,14 +291,14 @@ public class PermissionServiceImpl implements PermissionService {
                 return R.fail("权限ID不能为空");
             }
 
+            // 校验权限是否存在
             Permission permission = permissionRepository.findById(permissionId)
                     .orElse(null);
-            
             if (permission == null) {
                 return R.fail("权限不存在: " + permissionId);
             }
 
-            // 检查是否有角色关联了该权限
+            // 校验权限是否被角色关联：有角色关联时禁止删除
             if (permission.getRolePermissions() != null && !permission.getRolePermissions().isEmpty()) {
                 return R.fail("无法删除权限，该权限已被角色使用");
             }
@@ -250,6 +317,14 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
+    /**
+     * 根据权限ID查询权限实体（内部使用，如权限更新/删除前的校验）
+     * 同样采用"缓存优先"策略，提升查询效率
+     *
+     * @param permissionId 权限ID
+     * @return Permission - 成功返回权限实体；失败返回null
+     */
     @Override
     public Permission findById(Long permissionId) {
         if (permissionId == null) {
@@ -269,7 +344,7 @@ public class PermissionServiceImpl implements PermissionService {
             Permission permission = permissionRepository.findById(permissionId).orElse(null);
             
             if (permission != null) {
-                // 缓存权限信息
+                // 查询到权限实体时，存入缓存
                 redisService.setCacheObject(cacheKey, permission, CACHE_EXPIRE_TIME, TimeUnit.SECONDS);
             }
 
@@ -281,12 +356,18 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
     /**
-     * 从缓存获取用户权限
+     * 从Redis缓存中获取用户的权限列表
+     * 封装缓存查询逻辑，避免重复代码
+     *
+     * @param userId 用户ID
+     * @return Set<String> - 缓存中的权限名称集合；缓存不存在或异常时返回null
      */
     private Set<String> getUserPermissionsFromCache(Long userId) {
         try {
             String cacheKey = USER_PERMISSIONS_CACHE_PREFIX + userId;
+            // 从Redis读取缓存：依赖RedisService封装的通用缓存查询方法，返回权限集合
             return redisService.getCacheObject(cacheKey);
         } catch (Exception e) {
             log.warn("从缓存获取用户权限失败: userId={}", userId, e);
@@ -294,11 +375,17 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
     /**
-     * 缓存用户权限
+     * 将用户权限列表存入Redis缓存
+     * 封装用户权限的缓存写入逻辑，统一设置缓存过期时间，确保缓存数据时效性
+     *
+     * @param userId      用户ID（缓存键核心标识，与查询时的键保持一致）
+     * @param permissions 需缓存的用户权限集合（从数据库查询后的数据，确保数据准确性）
      */
     private void cacheUserPermissions(Long userId, Set<String> permissions) {
         try {
+            // 构建与查询逻辑一致的缓存键，保证缓存读写键的统一性，然后查询
             String cacheKey = USER_PERMISSIONS_CACHE_PREFIX + userId;
             redisService.setCacheObject(cacheKey, permissions, CACHE_EXPIRE_TIME, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -306,11 +393,16 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
     /**
-     * 清理权限缓存
+     * 清理指定权限ID对应的Redis缓存
+     * 用于权限信息变更（如权限名称修改、权限删除）后，清除单个权限的缓存，避免缓存数据与数据库不一致
+     *
+     * @param permissionId 待清理缓存的权限ID（缓存键核心标识，确保精准清理目标权限缓存）
      */
     private void clearPermissionCache(Long permissionId) {
         try {
+            // 构建单个权限的缓存键，然后删除
             String cacheKey = PERMISSION_CACHE_PREFIX + permissionId;
             redisService.deleteObject(cacheKey);
         } catch (Exception e) {
@@ -318,8 +410,11 @@ public class PermissionServiceImpl implements PermissionService {
         }
     }
 
+
     /**
-     * 清理所有用户权限缓存
+     * 批量清理所有用户的权限缓存
+     * 用于全局权限变更场景（如新增/删除通用权限、权限关联关系调整），确保所有用户的权限列表重新从数据库加载
+     * 避免部分用户使用旧的权限缓存，导致权限校验结果不准确
      */
     private void clearAllUserPermissionsCache() {
         try {

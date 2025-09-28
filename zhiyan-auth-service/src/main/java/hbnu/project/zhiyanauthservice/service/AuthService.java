@@ -46,7 +46,7 @@ public interface AuthService {
      * @param token JWT令牌
      * @return 用户ID
      */
-    Long validateToken(String token);
+    String validateToken(String token);
 
     /**
      * 将token加入黑名单
@@ -63,13 +63,4 @@ public interface AuthService {
      * @return 是否在黑名单中
      */
     boolean isTokenBlacklisted(String token);
-
-    /**
-     * 修改邮箱
-     *
-     * @param userId 用户ID
-     * @param changeEmailBody 修改邮箱表单
-     * @return 修改结果
-     */
-    R<Void> changeEmail(Long userId, ChangeEmailBody changeEmailBody);
 }
