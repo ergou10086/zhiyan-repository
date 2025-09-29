@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 权限工具类
- * 提供简化的权限检查方法
+ * 权限检查方法
  *
  * @author ErgouTree
  */
@@ -47,17 +47,6 @@ public class PermissionUtils {
     }
 
     /**
-     * 检查当前用户是否拥有任意一个指定角色
-     */
-    public static boolean hasAnyRole(String... roles) {
-        LoginUserBody loginUser = SecurityContextHolder.getLoginUser();
-        if (loginUser == null) {
-            return false;
-        }
-        return loginUser.hasAnyRole(roles);
-    }
-
-    /**
      * 检查当前用户是否可以创建项目
      */
     public static boolean canCreateProject() {
@@ -95,6 +84,20 @@ public class PermissionUtils {
     }
 
     /**
+     * 检查当前用户是否为开发者
+     */
+    public static boolean isDeveloper() {
+        return hasRole("DEVELOPER");
+    }
+
+    /**
+     * 检查当前用户是否为普通用户
+     */
+    public static boolean isUser() {
+        return hasRole("USER");
+    }
+
+    /**
      * 获取当前用户ID
      */
     public static Long getCurrentUserId() {
@@ -115,5 +118,30 @@ public class PermissionUtils {
      */
     public static boolean isLoggedIn() {
         return SecurityContextHolder.isLogin();
+    }
+
+    /**
+     * 检查当前用户在指定项目中是否具有指定角色
+     * TODO: 需要在项目服务中实现具体逻辑
+     */
+    public static boolean hasProjectRole(Long projectId, String projectRole) {
+        // 这里需要调用项目服务来检查用户在特定项目中的角色
+        // 暂时返回false，等项目服务实现后再完善
+        log.debug("检查用户在项目[{}]中是否具有角色[{}]，当前未实现", projectId, projectRole);
+        return false;
+    }
+
+    /**
+     * 检查当前用户是否为指定项目的拥有者
+     */
+    public static boolean isProjectOwner(Long projectId) {
+        return hasProjectRole(projectId, "OWNER");
+    }
+
+    /**
+     * 检查当前用户是否为指定项目的成员
+     */
+    public static boolean isProjectMember(Long projectId) {
+        return hasProjectRole(projectId, "MEMBER") || isProjectOwner(projectId);
     }
 }

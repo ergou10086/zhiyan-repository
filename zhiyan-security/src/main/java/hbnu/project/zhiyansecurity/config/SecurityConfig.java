@@ -1,5 +1,6 @@
 package hbnu.project.zhiyansecurity.config;
 
+import hbnu.project.zhiyansecurity.filter.JwtAuthenticationFilter;
 import hbnu.project.zhiyansecurity.interceptor.HeaderInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -12,14 +13,17 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
  * Spring Security安全配置
+ * @author ErgouTree
  */
 @Configuration
 @EnableWebSecurity
@@ -27,29 +31,36 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class SecurityConfig implements WebMvcConfigurer {
 
-
+    private final UserDetailsService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     /**
      * 密码编码器Bean
      * 使用BCrypt算法进行密码加密
-     *
-     * @return BCrypt密码编码器
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
+    /**
+     * 认证管理器
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
 
+    /**
+     * 认证提供者配置
+     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
-        return null;
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 
 
@@ -72,7 +83,9 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(headerInterceptor())
-                .addPathPatterns("/**") // 拦截所有请求
+                // 拦截所有请求
+                .addPathPatterns("/**")
+                // 排除不需要拦截的路径
                 .excludePathPatterns(
                         "/error", 
                         "/favicon.ico", 
@@ -80,10 +93,13 @@ public class SecurityConfig implements WebMvcConfigurer {
                         "/swagger-ui/**",
                         "/swagger-resources/**",
                         "/v3/api-docs/**"
-                ); // 排除不需要拦截的路径
+                );
     }
 
 
+    /**
+     * 安全过滤器链配置
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -102,13 +118,14 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .anyRequest().authenticated()
                 )
                 // 配置认证提供者
-                .authenticationProvider(authenticationProvider());
+                .authenticationProvider(authenticationProvider())
 
-                // 配置登录
+                // TODO:配置登录
 
-                // 配置登出
+                // TODO:配置登出
 
                 // 添加JWT过滤器
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
